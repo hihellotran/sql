@@ -1,0 +1,122 @@
+﻿create database thuvien
+use thuvien
+
+drop database thuvien
+-- Tạo bảng DAUSACH
+CREATE TABLE DAUSACH (
+  MADS INT PRIMARY KEY,
+  TENDS VARCHAR(255),
+  TACGIA VARCHAR(255),
+  NHAXB VARCHAR(255)
+);
+
+-- Tạo bảng SACH
+CREATE TABLE SACH (
+  MAS INT PRIMARY KEY,
+  TENSACH VARCHAR(255),
+  NGAYNHAP DATE,
+  TINHTRANG VARCHAR(255),
+  MADS INT,
+  FOREIGN KEY (MADS) REFERENCES DAUSACH(MADS)
+);
+
+-- Tạo bảng DOCGIA
+CREATE TABLE DOCGIA (
+  MADG INT PRIMARY KEY,
+  TENDG VARCHAR(255),
+  NGAYSINH DATE,
+  DIACHI VARCHAR(255),
+  DIENTHOAI VARCHAR(15)
+);
+
+-- Tạo bảng PHIEUMUON
+CREATE TABLE PHIEUMUON (
+  SOPM INT PRIMARY KEY,
+  NGAYMUON DATE,
+  MADG INT,
+  FOREIGN KEY (MADG) REFERENCES DOCGIA(MADG)
+);
+
+-- Tạo bảng CT_PHIEUMUON
+CREATE TABLE CT_PHIEUMUON (
+  SOPM INT,
+  MAS INT,
+  FOREIGN KEY (SOPM) REFERENCES PHIEUMUON(SOPM),
+  FOREIGN KEY (MAS) REFERENCES SACH(MAS)
+);
+
+-- Tạo bảng PHIEUTRA
+CREATE TABLE PHIEUTRA (
+  SOPT INT PRIMARY KEY,
+  NGAYTRA DATE,
+  SOPM INT,
+  FOREIGN KEY (SOPM) REFERENCES PHIEUMUON(SOPM)
+);
+
+-- Tạo bảng CT_PHIEUTRA
+CREATE TABLE CT_PHIEUTRA (
+  SOPT INT,
+  MAS INT,
+  FOREIGN KEY (SOPT) REFERENCES PHIEUTRA(SOPT),
+  FOREIGN KEY (MAS) REFERENCES SACH(MAS)
+);
+
+-- Thêm dữ liệu vào bảng DAUSACH
+INSERT INTO DAUSACH (MADS, TENDS, TACGIA, NHAXB)
+VALUES (1, 'Sách 1', 'Tác giả 1', 'Nhà xuất bản 1'),
+       (2, 'Sách 2', 'Tác giả 2', 'Nhà xuất bản 2');
+
+-- Thêm dữ liệu vào bảng SACH
+INSERT INTO SACH (MAS, TENSACH, NGAYNHAP, TINHTRANG, MADS)
+VALUES (1, 'Sách A', '2023-01-01', 'Tốt', 1),
+       (2, 'Sách B', '2023-02-01', 'Tốt', 1),
+       (3, 'Sách C', '2023-03-01', 'Cũ', 2);
+
+-- Thêm dữ liệu vào bảng DOCGIA
+INSERT INTO DOCGIA (MADG, TENDG, NGAYSINH, DIACHI, DIENTHOAI)
+VALUES (1, 'Độc giả A', '2000-01-01', 'Địa chỉ A', '1234567890');
+
+
+INSERT INTO PHIEUMUON (SOPM, NGAYMUON, MADG)
+VALUES 
+  (1, '2023-06-01', 1),
+  (2, '2023-06-02', 1),
+  (3, '2023-06-03', 2),
+  (4, '2023-06-04', 2),
+  (5, '2023-06-05', 3);
+
+
+INSERT INTO CT_PHIEUMUON (SOPM, MAS)
+VALUES 
+  (1, 1),
+  (1, 2),
+  (2, 1),
+  (2, 3),
+  (3, 2),
+  (3, 3),
+  (4, 3),
+  (5, 1),
+  (5, 2),
+  (5, 3);
+
+
+go
+create proc pm @sopm int
+as
+begin 
+	declare @tong int
+	set @tong = (select COUNT(*) from SACH, PHIEUMUON, CT_PHIEUMUON where SACH.MAS = CT_PHIEUMUON.MAS 
+	and PHIEUMUON.SOPM = CT_PHIEUMUON.SOPM and PHIEUMUON.SOPM = @sopm)
+	if (@tong=0)
+		begin
+			print(N'Không có sách nào được mượn')
+			return
+		end
+	else
+		begin 
+		print(@tong)
+			return
+		end
+end
+
+EXEC pm  1;
